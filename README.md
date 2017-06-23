@@ -4,7 +4,7 @@ Decorator to cache python get requests
 Create new virtual environment clone repo there and install necessary packages
 ```
 git clone git@github.com:andrew32167/cache-requests-decorator.git
-pip install -r cache-requests-decorato/requirements.txt
+pip install -r cache-requests-decorator/requirements.txt
 ```
 # Usage
 ```python
