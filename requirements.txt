@@ -1,0 +1,2 @@
+requests==2.18.1
+strict-rfc3339==0.7
