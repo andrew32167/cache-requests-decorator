@@ -12,7 +12,6 @@ pip install -r cache-requests-decorator/requirements.txt
 # -*- coding: utf-8 -*-
 from cache_decorator import CacheDecorator
 import requests
-from datetime import datetime
 
 
 @CacheDecorator
