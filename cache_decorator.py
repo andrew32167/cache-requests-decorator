@@ -66,8 +66,8 @@ class CacheDecorator(object):
 
         sorted_kwargs = sorted(dict(kwargs).items())
 
-        seed = self._hash_template.format(request_type=str(args),
-                                          params=sorted_kwargs)
+        seed = self._hash_template.format(request_type=self.func.__name__,
+                                          params=str(sorted_kwargs) + str(args))
 
         hash_seed = hashlib.md5(seed).hexdigest()
         filename = self._cache_file_template.format(hash=hash_seed,
