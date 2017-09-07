@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 
-@CacheDecorator
+@CacheDecorator()
 def delayed_get_request(url, **kwargs):
     time.sleep(10)
     return requests.get(url, **kwargs)

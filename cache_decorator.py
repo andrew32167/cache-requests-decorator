@@ -6,6 +6,9 @@ import hashlib
 import json
 import pickle
 from helper import local_to_rfc3339, rfc3339_to_local
+import functools
+
+_DEFAULT_CACHE_AGE = timedelta(minutes=42)
 
 
 class CacheDecorator(object):
@@ -16,21 +19,20 @@ class CacheDecorator(object):
 
     """
 
-    def __init__(self, func):
+    def __init__(self, cache_age=_DEFAULT_CACHE_AGE):
         """ init function that also creates cache directory and/or clean it """
 
-        self.func = func
         self._cache_dir = '/tmp/cache_decorator/'
         self._hash_template = '{request_type}_{params}'
         self._cache_file_template = '{hash}_{date}.cache'
-        self._cache_max_age = timedelta(minutes=42)
+        self._cache_max_age = cache_age
 
         if not os.path.isdir(self._cache_dir):
             os.mkdir(self._cache_dir)
 
         self._clear_cache_dir()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, fn):
         """
         Decorator callable function
 
@@ -39,21 +41,27 @@ class CacheDecorator(object):
         :return: result of passed function if cache not found, if found read from cache file
         """
 
-        hash_seed, filename = self._prepare_filename(*args, **kwargs)
+        self.func = fn
 
-        cache = self._check_cache(hash_seed)
-        if cache is not False:
-            try:
-                return self._pickle_read(cache)
-            except Exception:
-                os.remove('{}{}'.format(self._cache_dir, cache))
+        @functools.wraps(fn)
+        def _decorated(*args, **kwargs):
+            hash_seed, filename = self._prepare_filename(*args, **kwargs)
+
+            cache = self._check_cache(hash_seed)
+            if cache is not False:
+                try:
+                    return self._pickle_read(cache)
+                except ValueError:
+                    os.remove('{}{}'.format(self._cache_dir, cache))
+                    res = self.func(*args, **kwargs)
+                    self._pickle_write(filename, res)
+                    return res
+            else:
                 res = self.func(*args, **kwargs)
                 self._pickle_write(filename, res)
                 return res
-        else:
-            res = self.func(*args, **kwargs)
-            self._pickle_write(filename, res)
-            return res
+
+        return _decorated
 
     def _prepare_filename(self, *args, **kwargs):
         """
